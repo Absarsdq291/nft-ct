@@ -7,7 +7,7 @@ use anchor_spl::metadata::{
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use mpl_token_metadata::types::{DataV2, Creator};
 
-declare_id!("FLoYVi8k3Q4Sg9NQwLXmwJJWSmijxczEjcZhe6MPVBi3");
+declare_id!("C22JEQiqjh1QTPFkZuiubgYtFkdH58dqZr5rWzqk4kYz");
 
 #[program]
 pub mod nft_ct {
