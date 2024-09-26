@@ -15,7 +15,7 @@ describe("nft-ct", () => {
 
   it("Mints an NFT", async () => {
     // Metadata for the NFT
-    const id = new BN(2);
+    const id = new BN(5);
     const name = "Cat NFT";
     const symbol = "EMB";
     const uri = "https://gateway.irys.xyz/7Ce5hD2HdMzkSNJCp5u5Xe1y27qjZSWsyGjia3J7Gisd";
