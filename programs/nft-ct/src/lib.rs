@@ -5,9 +5,9 @@ use anchor_spl::metadata::{
     CreateMetadataAccountsV3, Metadata,
 };
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
-use mpl_token_metadata::types::{DataV2};
+use mpl_token_metadata::types::{DataV2, Creator};
 
-declare_id!("C22JEQiqjh1QTPFkZuiubgYtFkdH58dqZr5rWzqk4kYz");
+declare_id!("FLoYVi8k3Q4Sg9NQwLXmwJJWSmijxczEjcZhe6MPVBi3");
 
 #[program]
 pub mod nft_ct {
@@ -30,7 +30,7 @@ pub mod nft_ct {
 
         msg!("Run mint_to");
 
-        mint_to(
+        match mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
@@ -41,11 +41,17 @@ pub mod nft_ct {
                 &[&seeds[..]],
             ),
             1, // 1 token
-        )?;
+        ) {
+            Ok(_) => msg!("Minted 1 token successfully"),
+            Err(e) => {
+                msg!("Error during mint_to: {:?}", e);
+                return Err(e);
+            }
+        }
 
         msg!("Run create metadata accounts v3");
 
-        create_metadata_accounts_v3(
+        match create_metadata_accounts_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.metadata_program.to_account_info(),
                 CreateMetadataAccountsV3 {
@@ -63,19 +69,31 @@ pub mod nft_ct {
                 name,
                 symbol,
                 uri,
-                seller_fee_basis_points: 0,
-                creators: None,
+                seller_fee_basis_points: 500, // creator will receive 5% royalty on secondary sales
+                creators: Some(vec![
+                    Creator {
+                        address: ctx.accounts.authority.key(),
+                        verified: true,
+                        share: 100,
+                    },
+                ]),
                 collection: None,
                 uses: None,
             },
             true,
             true,
             None,
-        )?;
+        ) {
+            Ok(_) => msg!("Metadata created successfully"),
+            Err(e) => {
+                msg!("Error during create_metadata_accounts_v3: {:?}", e);
+                return Err(e);
+            }
+        }
 
         msg!("Run create master edition v3");
 
-        create_master_edition_v3(
+        match create_master_edition_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.metadata_program.to_account_info(),
                 CreateMasterEditionV3 {
@@ -92,7 +110,13 @@ pub mod nft_ct {
                 &[&seeds[..]],
             ),
             Some(1),
-        )?;
+        ) {
+            Ok(_) => msg!("Master edition created successfully"),
+            Err(e) => {
+                msg!("Error during create_master_edition_v3: {:?}", e);
+                return Err(e);
+            }
+        }
 
         msg!("Minted NFT successfully");
 
@@ -142,8 +166,8 @@ pub struct CreateNFT<'info> {
         bump,
         seeds::program = metadata_program.key()
     )]
-    /// CHECK:
-    pub master_edition_account: UncheckedAccount<'info>,
+    /// CHECK: Manual validation will be done in the handler
+    pub master_edition_account: AccountInfo<'info>,
     #[account(
         mut,
         seeds = [
@@ -154,6 +178,6 @@ pub struct CreateNFT<'info> {
         bump,
         seeds::program = metadata_program.key()
     )]
-    /// CHECK:
-    pub nft_metadata: UncheckedAccount<'info>,
+    /// CHECK: Manual validation will be done in the handler
+    pub nft_metadata: AccountInfo<'info>,
 }
